@@ -1,0 +1,350 @@
+ <!-- blazonEditor partial starts -->
+    <script src="/js/codemirror.js"></script>
+    <script src="/js/addon/display/placeholder.js"></script>
+    <script src="/js/addon/display/fullscreen.js"></script>
+    <script src="/js/addon/display/panel.js"></script>
+    <script src="/js/addon/dialog/dialog.js"></script>
+    <script src="/js/addon/search/searchcursor.js"></script>
+    <script src="/js/addon/search/search.js"></script>
+    <script src="/js/addon/scroll/annotatescrollbar.js"></script>
+    <script src="/js/addon/search/matchesonscrollbar.js"></script>
+    <script src="/js/addon/search/jump-to-line.js"></script>
+    <script src="/js/addon/mode/simple.js"></script>
+    <script src="/js/addon/hint/show-hint.js"></script>
+    <script src="/js/keymap/sublime.js"></script>
+    <script src="/js/blazon-hint.js"></script>
+    <script>
+        CodeMirror.defineMode("blazonry", function() {
+            return {
+                startState: function() {return {inString: false,
+                                                squareBrackets: false,
+                                                roundBrackets: false,
+                                                drawingInstructions: false,
+                                                chargeAdjustment: false,
+                                                inComment: false,
+                                                celestial: false
+                                            };},
+                token: function(stream, state) {
+                    // single line comments always win
+                    if (stream.peek() == '#') {
+                        stream.skipToEnd();
+                        return 'comment';
+                    }
+                    slash = false;
+                    if (stream.peek() == '/') {
+                        stream.next(); // move on
+                        if (stream.peek() == '/') {
+                            stream.skipToEnd();
+                            return 'comment';
+                        } else {
+                            slash = true;
+                        }
+                    }
+                    // then multi-line (delimited) comments
+                    if (!state.inComment && slash && stream.peek() == '*') {
+                        state.inComment = true;
+                        stream.next();
+                        return 'comment';
+                    }
+                    if (state.inComment) {
+                        if (stream.peek() == '*') {
+                            stream.next();
+                            if (stream.peek() == '/') {
+                                state.inComment = false;
+                            }
+                        }
+                        stream.next();
+                        return 'comment';
+                    }
+                    // then strings
+                    if (!state.inString && stream.peek() == '"') {
+                        stream.next();            // Skip quote
+                        state.inString = true;    // Update state
+                    }
+                    if (state.inString) {
+                        if (stream.skipTo('"')) { // Quote found on this line
+                            // but ignore if preceded by backslash
+                            stream.backUp(1);
+                            if (stream.peek() == '\\') {
+                                stream.next();
+                                stream.next();
+                                return "string"; // still in a string
+                            } // else
+                            stream.next();          // undo the backUp
+                            stream.next();          // Skip quote
+                            state.inString = false; // Clear flag
+                        } else {
+                            stream.skipToEnd();    // Rest of line is string
+                        }
+                        return "string";          // Token style
+                    }
+                    // Brackets next
+                    if (!state.squareBrackets && stream.peek() == '[') {
+                        stream.next();
+                        state.squareBrackets = true;
+                    }
+                    if (state.squareBrackets) {
+                        if (stream.skipTo(']')) {
+                            stream.next();
+                            state.squareBrackets = false;
+                        } else {
+                            stream.skipToEnd();
+                        }
+                        return 'square-brackets';
+                    }
+                    if (!state.roundBrackets && stream.peek() == '(') {
+                        stream.next();
+                        state.roundBrackets = true;
+                    }
+                    if (state.roundBrackets) {
+                        if (stream.skipTo(')')) {
+                            stream.next();
+                            state.roundBrackets = false;
+                        } else {
+                            stream.skipToEnd();
+                        }
+                        return 'round-brackets';
+                    }
+                    // All other spaces are not significant
+                    if (stream.eatSpace()) return; // no token
+                    // so must have a non-space, gather up a whole word
+                    var word = '';
+                    while((found = stream.eat(/[0-9A-Za-z-]/)) != undefined)
+                        word += found;
+                    // if word is empty, this must be punctuation
+                    if (word == '') {
+                        stream.next();
+                        return 'punctuation';
+                    }
+                    word = word.toLowerCase();
+                    // is the word a tincture?
+                    var tinctures = ['or','vert','argent','sable','gules',
+                            'brunatre','purpure','murrey','sanguine','carnation',
+                            'rose', 'orange', 'tenne', 'cendree', 'bisque', 'senois'];
+                    if (tinctures.includes(word)) return word;
+                    // is abbreviated (or an alternate)?
+                    switch (word) {
+                        case 'azure':
+                        case 'blue':
+                        case 'az':
+                            if (state.celestial) {
+                                state.celestial = false;
+                                return 'celestial';
+                            } else {
+                                return 'azure';
+                            }
+                            break;
+                        case 'gold':
+                            return 'or';
+                            break;
+                        case 'sinople':
+                        case 'green':
+                            return 'vert';
+                            break;
+                        case 'gu':
+                        case 'gui':
+                        case 'guiles' :
+                        case 'red':
+                            return 'gules';
+                            break;
+                        case 'arg':
+                        case 'white':
+                        case 'silver':
+                            return 'argent';
+                            break;
+                        case 'sa':
+                        case 'black':
+                            return 'sable';
+                            break;
+                        case 'purple':
+                            return 'purpure';
+                            break;
+                        case 'brown':
+                            return 'brunatre';
+                            break;
+                        case 'pink':
+                            return 'rose';
+                            break;
+                        case 'bis':
+                            return 'bisque';
+                            break;
+                        case 'tanned':
+                        case 'tawny':
+                            return 'tenne';
+                            break;
+                        case 'celestial':
+                        case 'bleu':
+                        case 'celeste':
+                        case 'horizon':
+                            state.celestial = true;
+                            return 'celestial';
+                            break;
+                        default:
+                    }
+                    state.celestial = false;
+                    // is the word a fur?
+                    switch (word) {
+                        case 'ermine':
+                        case 'counter-ermine':
+                        case 'ermines':
+                        case 'erminites':
+                            return 'black-white';
+                            break;
+                        case 'pean':
+                        case 'erminois':
+                            return 'black-yellow';
+                            break;
+                        case 'potent':
+                        case 'vair':
+                        case 'counter-potent':
+                        case 'potent-counter-potent':
+                            return 'black-yellow';
+                        default:
+                    }
+                    // is part of the quartering scheme?
+                    var quarterings = ['quarterly', 'first', 'second', 'third', 'fourth',
+                        'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh',
+                        'twelth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth'];
+                    var roman = /^[ivxc]+$/;
+                    if (quarterings.includes(word) || word.match(roman)) {
+                        if (stream.peek() == ')') stream.next();
+                        return 'quarter';
+                    }
+                    var digits = /^[0-9]+$/;
+                    if (word.match(digits)) {
+                        if (stream.peek() == ')') {
+                            stream.next()
+                            return 'quarter';
+                        }
+                    }
+                    var ordinal = /^[0-9]+(st|nd|rd|th)$/;
+                    if (word.match(ordinal)) {
+                        if (stream.peek() == ')') stream.next();
+                        return 'quarter';
+                    }
+                    var rollWords = ['armorial', 'roll', 'next', 'then', 'skip', 'consisting',
+                                        'comprising', 'background'];
+                    if (word.includes(rollWords)) {
+                        return 'roll';
+                    }
+                    // is it part of a charge adjustment?
+                    var chargeAdj1 = ['shown', 'shewn', 'moved', 'smaller', 'larger',
+                        'higher', 'lower', 'to', 'narrower', 'wider' ];
+                    var chargeAdj2 = ['to', 'of', 'than', 'the', 'is', 'normal',
+                            'usual', 'position', 'location', 'and', 'somewhat',
+                            'place', 'positions', 'locations', 'places', 
+                            'very', 'much', 'a', 'lot', 'dexter', 'rotated', 'anti',
+                            'counter', 'anticlockwise', 'counterclockwise',
+                            'little', 'slightly', 'larger', 'smaller', 
+                            'bigger', 'above', 'raised', 'sinister',
+                            'lifted', 'higher', 'below', 'lower', 
+                            'lowered', 'dropped', 'further',
+                            'close', 'closer', 'together', 'apart' ];
+                    if (!state.chargeAdjustment && chargeAdj1.includes(word)) {
+                        state.chargeAdjustment = true;
+                        return 'charge-adjustment';
+                    }
+                    if (state.chargeAdjustment) { 
+                        if (chargeAdj2.includes(word))
+                            return 'charge-adjustment';
+                        else
+                            state.chargeAdjustment = false;
+                    }
+                    // or is it part of the drawing instructions?
+                    var drawing1 = ['palette', 'with', 'in', 'using',
+                            'a', 'an', 'and', 'the', 'tinctures',
+                            'colours', 'colors', 'shape', 'appearance',
+                            'style', 'effect', 'aspect',
+                            'ratio', 'of', 'proportions'];
+                    if (!state.drawingInstructions && word == 'drawn') {
+                        state.drawingInstructions = true;
+                        return 'drawing-instructions';
+                    }
+                    if (state.drawingInstructions && drawing1.includes(word)) {
+                        return 'drawing-instructions';
+                    }
+                    // otherwise it isn't anything we need to highlight
+                    return; // no token
+                } // end of token function
+            }; // end of return
+        });
+
+function edChangeMode() {
+    if (blazonEditor.getOption('mode') != 'blazonry') {
+        blazonEditor.setOption('mode','blazonry');
+    } else {
+        blazonEditor.setOption('mode','none');
+    }
+}
+
+function edFind() { blazonEditor.execCommand("find"); }
+function edReplace() { blazonEditor.execCommand("replace"); }
+function edJump() { blazonEditor.execCommand("jumpToLine"); }
+    
+
+function edMaximise() {
+    if (blazonEditor.getOption("fullScreen")) {
+        blazonEditor.setOption("fullScreen", false);
+        jQuery('.fixed-top').show();
+    } else {
+        alert("Press Esc to restore original screen");
+        blazonEditor.setOption("fullScreen", true);
+        jQuery('.fixed-top').hide();
+    }
+}
+
+function commentLine() {
+	if (blazonEditor.somethingSelected()) {
+		from = blazonEditor.getCursor("from");
+		to = blazonEditor.getCursor("to");
+	} else {
+		from = blazonEditor.getCursor();
+		to = from;
+	}
+	for (i = from.line; i <= to.line; i++) {
+		blazonEditor.setSelection({line: i, ch: 0},{line: i, ch: 3});
+		if (blazonEditor.getSelection() == "// ") {
+			blazonEditor.replaceSelection("");
+		} else {
+			blazonEditor.replaceRange("// ",{line: i, ch: 0});
+		}
+	}
+	blazonEditor.setCursor({line: to, ch: 0});
+}
+
+function edCopy() {
+    blazonEditor.execCommand("selectAll");
+    document.execCommand("copy");
+    blazonEditor.setSelection({line: 0, ch: 0});
+}
+
+function edClear() { blazonEditor.setValue(''); };
+function edSave() { saveBlazon(blazonEditor.getValue()); };
+function edLoad() { jQuery('#uploadControls').toggle(); };
+
+function createEditor() {
+    return CodeMirror.fromTextArea(document.getElementById('blazon'), {
+        mode: "blazonry",
+        theme: "default",
+        keymap: "sublime",
+        lineNumbers: true,
+        lineWrapping: true,
+        // autoClearEmptyLines: false,
+        // value: "\n\n\n",
+        viewportMargin: Infinity,
+        extraKeys: {
+            "Ctrl-Space": "autocomplete",
+            "Ctrl-/": commentLine,
+            "Esc": function(cm) {
+                if (cm.getOption("fullScreen")) {
+                    cm.setOption("fullScreen", false);
+                    jQuery('.fixed-top').show();
+                }
+            }
+        }
+    });
+}
+
+
+    </script>
+<!-- blazonEditor partial ends -->

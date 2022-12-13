@@ -1,0 +1,16 @@
+{% capture actualStart %}{{ page.startImg | default: site.latestGallery }}{% endcapture %}
+{% capture newTitle %}Shield Gallery {{ actualStart }} - {{ page.endImg }}{% endcapture %}
+{% include upper.html title = newTitle %}
+<script src="/js/voting.js"></script>
+<!-- gallery-index template starts -->
+{% include navigation.html next = page.nextIndex prev = page.prevIndex up = page.upIndex first = page.firstIndex last = page.lastIndex showLimits = true galleryRandom = true %}
+<!-- Note that for historical reasons there is no content element in this template -->
+<p>Here you will find coat of arms suggestions kindly submitted by DrawShield users.
+        They are presented with the most recent shown first, earlier submissions can be found in later pages. <span style="color: red;">Submissions may take up to 48 hours to appear.</span></p>
+<p>There is also a <a href="/gallery/search.html">search page that allows you to search by title or content</a>, and you can view the <a href="/gallery/latest-likes.html">most recently liked entries here</a>.</p>
+<p class="small">Click on each shield to see a larger version and to get more information about the blazon.</p>
+{% include gallery.html startImg = actualStart endImg = page.endImg %}
+{% include navigation.html next = page.nextIndex  prev = page.prevIndex up = page.upIndex first = page.firstIndex last = page.lastIndex showLimits = true galleryRandom = true %}
+<!-- gallery-index template ends -->
+<script>fillBadges();</script>
+{% include lower.html %}
