@@ -1,0 +1,54 @@
+---
+group02: true
+g02menu12: active
+layout: sidemenu
+sidemenu: user-guide-menu
+pageTitle: Enabling Additional Named Colours
+upLink: index.html
+nextLink: fabric-patterns.html
+prevLink: half-charges.html
+---
+
+<h2>The "Standard" Heraldic Colours and "Palettes"</h2>
+
+<p>There aren't really any "standards" for heraldic colours, however there are a reasonably widely accepted set of tincture names that are considered "heraldic".
+    <em>(Azure, gules, or, etc.)</em> DrawShield recognises all of these accepted colours. Sadly, the Pantone company wasn't around in the middle ages and Isaac Newton had yet to discern the nature of light, let alone split it into Red, Green and Blue components, so, although the colour names were recognised there is no particular agreement on what, for example, <em>gules</em> represents, other than "something red". Various organisations have suggested mappings between heraldic colour names, and DrawShield supports several of these, selected on the preferences panel under the section "Palette for Heraldic Textures". If you have no particular preference I would recommend using the Wikipedia palette, largely because I can't recall where I came acress the values for the original "DrawShield" palette...</p>
+
+<h2>Enabling Additional Colour Names</h2>
+
+<p>By default, DrawShield will *only* display the "standard" heraldic colours mentioned above. It may <strong>recognise</strong> other named colours, but unless you explicitly enable these colours then they will be replaced by a mid-gray and a warning message generated. To make these colours display you must explicitly enable these colours, which, for convenience have been grouped into sets. Each set can be enabled individually on the preferences panel under the heading "Additional (non-heraldic) Tinctures.</p>
+
+<p>Alternatively, you can enable the colour sets in the blazon itself, by, for example, appending the following to the <strong>end</strong> of the blazon <em>drawn using warhammer colours</em>. You can also say <em>web colours</em> or <em>tartan colours</em>. This will have an effect <strong>only</strong> on the current blazon and will not change your preferences.</p>
+
+<p>The currently supported sets are as follows:</p>
+
+<ul>
+    <li><strong>Named Web Colours</strong> - these are set of colours defined for use in CSS Style sheets and can be seen here: <a href="https://www.computerhope.com/htmcolor.htm">. https://www.computerhope.com/htmcolor.htm
+    </a></li>
+    <li><strong>Warhammer Colours</strong> - these are the paint colours provided by Citadel Miniatures for use on Warhammer 40,000 models and can be seen <a href="https://en.wikipedia.org/wiki/List_of_Citadel_paints"> on this Wikipedia page.</a></li>
+    <li><strong>Tartan Colours</strong> - these are colours used in Scottish Weaving and can be seen at the end of this page</li>
+</ul>
+
+<p>More information on the Warhammer colours can be found on the user guide page <a href="/user-guide/extensions/pauldron.html">Creating Warhammer Pauldrons</a></p>
+
+<h2>Automatic Enabling of Colour Sets</h2>
+
+<p>If the <em>Flag</em> shape is chosen, named web colours are automatically enabled.</p>
+
+<p>If a <em>tartan</em> pattern is used, then tartan colours are automatically enabled.</p>
+
+<p>If the <em>Pauldron</em> shape is chosen, Warhammer colours are automatically enabled.</p>
+
+<h2 class="lead">Important Note</h2>
+
+<p>Although it might seem useful just leave these extra colours enabled all the time, however I don't recommend this.
+    There some names that "overlap" (notable <em>azure</em>) and with extra colours enabled you will get the extra version of these colours,
+not the heraldic one. In most cases you can leave these disabled and let the automatic enabling take care of things.</p>
+
+<p>There may be situations you really need to enable extra colours, but still have access to the heraldic colours - for
+example if you want a tartan pattern on a chief but have the heraldic shade of azure on the field. In this case you
+can prefix colours with the word <em>heraldic</em>, which will force the use of the heraldic shade, regardless of
+what additional colour sets are enabled.</p>
+
+
+
