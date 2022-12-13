@@ -1,0 +1,32 @@
+source: ./source
+# Command line destination can override this
+#destination: /var/www/test
+destination: /Users/karlw/Sites
+
+
+# don't delete
+keep_files: [ .htaccess, include, test, gallery/giotd.html ]
+
+defaults:
+    -
+      scope:
+        path: ""
+      values:
+        layout: "default"
+
+siteURL: https://drawshield.net
+siteTitle: DrawShield
+
+buildNum: 1288
+
+latestGallery: 009945
+incrementGallery: 24
+
+collections:
+  catalog:
+    output: true
+  reference:
+    output: true
+  gplus:
+    output: true
+
